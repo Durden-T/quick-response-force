@@ -686,6 +686,7 @@ function saveAsNewPreset(panel) {
     rateCuckold: parseFloat(panel.find('#qrf_rate_cuckold').val()),
     // [新功能] 导出时包含新增的设置
     extractTags: panel.find('#qrf_extract_tags').val(),
+    extractTagsFromInput: panel.find('#qrf_extract_tags_from_input').val(),
     minLength: parseInt(panel.find('#qrf_min_length').val(), 10),
     contextTurnCount: parseInt(panel.find('#qrf_context_turn_count').val(), 10),
   };
@@ -975,6 +976,7 @@ function loadSettings(panel) {
 
   // 加载标签摘取设置
   panel.find('#qrf_extract_tags').val(apiSettings.extractTags || '');
+  panel.find('#qrf_extract_tags_from_input').val(apiSettings.extractTagsFromInput || '正文');
 
   // 加载匹配替换速率
   panel.find('#qrf_rate_main').val(apiSettings.rateMain);

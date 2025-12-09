@@ -94,6 +94,7 @@ export const defaultSettings = {
       rateErotic: 0,
       rateCuckold: 10,
       extractTags: '',
+      extractTagsFromInput: '正文',
       minLength: null,
       contextTurnCount: 3,
     },

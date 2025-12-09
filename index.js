@@ -367,6 +367,39 @@ async function runOptimizationLogic(userMessage) {
     }
     const formattedHistory = fullHistory.map(msg => `${msg.role}："${sanitizeHtml(msg.content)}"`).join(' \n ');
 
+    // [新功能] 从聊天记录中提取指定标签内容
+    let extractedInputContent = userMessage;
+    const finalApiSettings = {
+      ...apiSettings,
+      extractTags: apiSettings.extractTags,
+      extractTagsFromInput: apiSettings.extractTagsFromInput || '正文'
+    };
+    const inputTagToExtract = finalApiSettings.extractTagsFromInput;
+    if (inputTagToExtract && inputTagToExtract.trim() !== '') {
+      const context = getContext();
+      if (context && context.chat && context.chat.length > 0) {
+        const safeTagName = escapeRegExp(inputTagToExtract.trim());
+        const regex = new RegExp(`<${safeTagName}>([\\s\\S]*?)<\/${safeTagName}>`, 'gi');
+        const allMatches = [];
+
+        // 遍历所有聊天记录，收集所有匹配的标签内容
+        for (const message of context.chat) {
+          if (message.mes) {
+            let match;
+            while ((match = regex.exec(message.mes)) !== null) {
+              allMatches.push(match[1].trim());
+            }
+          }
+        }
+
+        // 如果找到匹配的内容，用它们替换用户消息
+        if (allMatches.length > 0) {
+          extractedInputContent = allMatches.join('\n\n');
+          console.log(`[${extension_name}] 从聊天记录中提取 [${inputTagToExtract}] 标签内容，共 ${allMatches.length} 处`);
+        }
+      }
+    }
+
     const prompts = apiSettings.prompts || [];
 
     // 遍历提示词列表构建消息
@@ -395,7 +428,6 @@ async function runOptimizationLogic(userMessage) {
       });
     }
 
-    const finalApiSettings = { ...apiSettings, extractTags: apiSettings.extractTags };
     const minLength = settings.minLength || 0;
     let processedMessage = null;
     const maxRetries = 3;
@@ -457,7 +489,7 @@ async function runOptimizationLogic(userMessage) {
       }
 
       // 使用可能被处理过的 messageForTavern 构建最终消息
-      const finalMessage = `${userMessage}\n\n${finalSystemDirectiveContent}\n${messageForTavern}`;
+      const finalMessage = `${extractedInputContent}\n\n${finalSystemDirectiveContent}\n${messageForTavern}`;
 
       if ($toast) toastr.clear($toast);
       if (minLength <= 0) {
